@@ -1,0 +1,66 @@
+{
+  "name": "hono-neo4j-embed",
+  "version": "1.0.0",
+  "description": "Neovis.js embeddable iframe generation with signed tokens using Hono and Neo4j",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "test": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js --coverage",
+    "test:e2e": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js tests/e2e",
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:clean": "tsx src/scripts/cleanup.ts",
+    "test:embed": "tsx src/scripts/test-embed.ts"
+  },
+  "keywords": [
+    "hono",
+    "neo4j",
+    "neovis",
+    "embed",
+    "jwt",
+    "graph"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/node-server": "^1.19.5",
+    "@types/uuid": "^11.0.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "hono": "^4.6.3",
+    "jsonwebtoken": "^9.0.2",
+    "neo4j-driver": "^5.14.0",
+    "uuid": "^13.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.1.1",
+    "ts-jest": "^29.4.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1"
+}
