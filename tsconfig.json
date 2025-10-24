@@ -5,8 +5,6 @@
     "lib": ["ES2022"],
     "moduleResolution": "bundler",
     "outDir": "./dist",
-    "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./src/*"],
       "@domain/*": ["./src/domain/*"],

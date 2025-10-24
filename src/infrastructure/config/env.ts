@@ -17,6 +17,9 @@ const envSchema = z.object({
   NEO4J_PASSWORD: z.string().min(1),
   NEO4J_DATABASE: z.string().default('neo4j'),
 
+  // SQLite Database
+  SQLITE_DB_PATH: z.string().default('./data/embedder.db'),
+
   // JWT
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRATION: z.string().default('7d'),

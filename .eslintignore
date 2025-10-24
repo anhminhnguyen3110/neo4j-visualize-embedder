@@ -3,3 +3,4 @@ dist/
 build/
 *.config.js
 jest.config.js
+data/

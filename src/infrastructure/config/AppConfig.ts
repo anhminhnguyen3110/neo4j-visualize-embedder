@@ -22,6 +22,10 @@ export const AppConfig = {
     database: env.NEO4J_DATABASE,
   },
 
+  sql: {
+    path: env.SQLITE_DB_PATH,
+  },
+
   auth: {
     jwtSecret: env.JWT_SECRET,
     jwtExpiration: env.JWT_EXPIRATION,

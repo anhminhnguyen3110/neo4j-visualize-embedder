@@ -1,184 +1,269 @@
 /**
- * Seed Script - Load sample Movie/Actor data into Neo4j
- * Run: pnpm seed
+ * Seed Neo4j database with sample movie data
+ * Run: npm run seed
  */
+import neo4j, { Driver } from 'neo4j-driver';
+import { env } from '../infrastructure/config/env';
 
-import { neo4jClient } from '../infrastructure/database';
+const driver: Driver = neo4j.driver(
+  env.NEO4J_URI,
+  neo4j.auth.basic(env.NEO4J_USER, env.NEO4J_PASSWORD)
+);
 
-async function seedData() {
-  console.log('🌱 Starting data seeding...');
+async function seedDatabase() {
+  const session = driver.session({ database: env.NEO4J_DATABASE });
 
   try {
-    // Create constraints
-    console.log('📋 Creating constraints...');
-    await neo4jClient.write(
-      `CREATE CONSTRAINT person_id IF NOT EXISTS FOR (p:Person) REQUIRE p.id IS UNIQUE`
-    );
-    await neo4jClient.write(
-      `CREATE CONSTRAINT movie_id IF NOT EXISTS FOR (m:Movie) REQUIRE m.id IS UNIQUE`
-    );
-    await neo4jClient.write(
-      `CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE`
-    );
-    await neo4jClient.write(
-      `CREATE CONSTRAINT user_email IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE`
-    );
+    console.log('🌱 Starting Neo4j database seeding...');
 
-    // Clear existing data
-    console.log('🗑️  Clearing existing sample data...');
-    await neo4jClient.write(`MATCH (p:Person) DETACH DELETE p`);
-    await neo4jClient.write(`MATCH (m:Movie) DETACH DELETE m`);
+    // Clear existing data (optional - comment out if you want to keep existing data)
+    console.log('🗑️  Clearing existing data...');
+    await session.run('MATCH (n) DETACH DELETE n');
 
     // Create Movies
     console.log('🎬 Creating movies...');
-    const movies = [
-      { id: 'movie1', title: 'The Matrix', released: 1999, tagline: 'Welcome to the Real World' },
-      { id: 'movie2', title: 'The Matrix Reloaded', released: 2003, tagline: 'Free your mind' },
-      { id: 'movie3', title: 'The Matrix Revolutions', released: 2003, tagline: 'Everything that has a beginning has an end' },
-      { id: 'movie4', title: 'The Devil\'s Advocate', released: 1997, tagline: 'Evil has its winning ways' },
-      { id: 'movie5', title: 'A Few Good Men', released: 1992, tagline: 'In the heart of the nation\'s capital, in a courthouse of the U.S. government' },
-      { id: 'movie6', title: 'Top Gun', released: 1986, tagline: 'I feel the need, the need for speed.' },
-      { id: 'movie7', title: 'Jerry Maguire', released: 2000, tagline: 'The rest of his life begins now.' },
-      { id: 'movie8', title: 'Stand By Me', released: 1986, tagline: 'For some, it\'s the last real taste of innocence, and the first real taste of life.' },
-      { id: 'movie9', title: 'As Good as It Gets', released: 1997, tagline: 'A comedy from the heart that goes for the throat.' },
-      { id: 'movie10', title: 'What Dreams May Come', released: 1998, tagline: 'After life there is more. The end is just the beginning.' },
-    ];
-
-    for (const movie of movies) {
-      await neo4jClient.write(
-        `CREATE (m:Movie {id: $id, title: $title, released: $released, tagline: $tagline})`,
-        movie
-      );
-    }
+    await session.run(`
+      CREATE (m1:Movie {title: 'The Matrix', released: 1999, tagline: 'Welcome to the Real World'})
+      CREATE (m2:Movie {title: 'The Matrix Reloaded', released: 2003, tagline: 'Free your mind'})
+      CREATE (m3:Movie {title: 'The Matrix Revolutions', released: 2003, tagline: 'Everything that has a beginning has an end'})
+      CREATE (m4:Movie {title: "The Devil's Advocate", released: 1997, tagline: 'Evil has its winning ways'})
+      CREATE (m5:Movie {title: 'A Few Good Men', released: 1992, tagline: "You can't handle the truth!"})
+      CREATE (m6:Movie {title: 'Top Gun', released: 1986, tagline: 'I feel the need, the need for speed'})
+      CREATE (m7:Movie {title: 'Jerry Maguire', released: 2000, tagline: 'Show me the money!'})
+      CREATE (m8:Movie {title: 'Stand By Me', released: 1986, tagline: "For some, it's the last real taste of innocence"})
+      CREATE (m9:Movie {title: 'As Good as It Gets', released: 1997, tagline: 'A comedy from the heart'})
+      CREATE (m10:Movie {title: 'What Dreams May Come', released: 1998, tagline: 'After life there is more'})
+    `);
 
     // Create People
     console.log('👥 Creating people...');
-    const people = [
-      { id: 'person1', name: 'Keanu Reeves', born: 1964 },
-      { id: 'person2', name: 'Carrie-Anne Moss', born: 1967 },
-      { id: 'person3', name: 'Laurence Fishburne', born: 1961 },
-      { id: 'person4', name: 'Hugo Weaving', born: 1960 },
-      { id: 'person5', name: 'Lilly Wachowski', born: 1967 },
-      { id: 'person6', name: 'Lana Wachowski', born: 1965 },
-      { id: 'person7', name: 'Tom Cruise', born: 1962 },
-      { id: 'person8', name: 'Jack Nicholson', born: 1937 },
-      { id: 'person9', name: 'Demi Moore', born: 1962 },
-      { id: 'person10', name: 'Kevin Bacon', born: 1958 },
-      { id: 'person11', name: 'Kiefer Sutherland', born: 1966 },
-      { id: 'person12', name: 'Cuba Gooding Jr.', born: 1968 },
-      { id: 'person13', name: 'River Phoenix', born: 1970 },
-      { id: 'person14', name: 'Corey Feldman', born: 1971 },
-      { id: 'person15', name: 'Robin Williams', born: 1951 },
-    ];
+    await session.run(`
+      CREATE (p1:Person {name: 'Keanu Reeves', born: 1964})
+      CREATE (p2:Person {name: 'Carrie-Anne Moss', born: 1967})
+      CREATE (p3:Person {name: 'Laurence Fishburne', born: 1961})
+      CREATE (p4:Person {name: 'Hugo Weaving', born: 1960})
+      CREATE (p5:Person {name: 'Lilly Wachowski', born: 1967})
+      CREATE (p6:Person {name: 'Lana Wachowski', born: 1965})
+      CREATE (p7:Person {name: 'Al Pacino', born: 1940})
+      CREATE (p8:Person {name: 'Charlize Theron', born: 1975})
+      CREATE (p9:Person {name: 'Tom Cruise', born: 1962})
+      CREATE (p10:Person {name: 'Jack Nicholson', born: 1937})
+      CREATE (p11:Person {name: 'Demi Moore', born: 1962})
+      CREATE (p12:Person {name: 'Kevin Bacon', born: 1958})
+      CREATE (p13:Person {name: 'Cuba Gooding Jr.', born: 1968})
+      CREATE (p14:Person {name: 'Renee Zellweger', born: 1969})
+      CREATE (p15:Person {name: 'River Phoenix', born: 1970})
+      CREATE (p16:Person {name: 'Corey Feldman', born: 1971})
+      CREATE (p17:Person {name: 'Wil Wheaton', born: 1972})
+      CREATE (p18:Person {name: 'Helen Hunt', born: 1963})
+      CREATE (p19:Person {name: 'Greg Kinnear', born: 1963})
+      CREATE (p20:Person {name: 'Robin Williams', born: 1951})
+    `);
 
-    for (const person of people) {
-      await neo4jClient.write(
-        `CREATE (p:Person {id: $id, name: $name, born: $born})`,
-        person
-      );
-    }
+    // Create ACTED_IN relationships
+    console.log('🎭 Creating ACTED_IN relationships...');
+    await session.run(`
+      MATCH (p:Person {name: 'Keanu Reeves'}), (m:Movie {title: 'The Matrix'})
+      CREATE (p)-[:ACTED_IN {roles: ['Neo']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Carrie-Anne Moss'}), (m:Movie {title: 'The Matrix'})
+      CREATE (p)-[:ACTED_IN {roles: ['Trinity']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Laurence Fishburne'}), (m:Movie {title: 'The Matrix'})
+      CREATE (p)-[:ACTED_IN {roles: ['Morpheus']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Hugo Weaving'}), (m:Movie {title: 'The Matrix'})
+      CREATE (p)-[:ACTED_IN {roles: ['Agent Smith']}]->(m)
+    `);
 
-    // Create relationships
-    console.log('🔗 Creating relationships...');
-    const relationships = [
-      // The Matrix
-      { personId: 'person1', movieId: 'movie1', type: 'ACTED_IN', roles: ['Neo'] },
-      { personId: 'person2', movieId: 'movie1', type: 'ACTED_IN', roles: ['Trinity'] },
-      { personId: 'person3', movieId: 'movie1', type: 'ACTED_IN', roles: ['Morpheus'] },
-      { personId: 'person4', movieId: 'movie1', type: 'ACTED_IN', roles: ['Agent Smith'] },
-      { personId: 'person5', movieId: 'movie1', type: 'DIRECTED', roles: [] },
-      { personId: 'person6', movieId: 'movie1', type: 'DIRECTED', roles: [] },
-      // The Matrix Reloaded
-      { personId: 'person1', movieId: 'movie2', type: 'ACTED_IN', roles: ['Neo'] },
-      { personId: 'person2', movieId: 'movie2', type: 'ACTED_IN', roles: ['Trinity'] },
-      { personId: 'person3', movieId: 'movie2', type: 'ACTED_IN', roles: ['Morpheus'] },
-      { personId: 'person5', movieId: 'movie2', type: 'DIRECTED', roles: [] },
-      { personId: 'person6', movieId: 'movie2', type: 'DIRECTED', roles: [] },
-      // The Matrix Revolutions
-      { personId: 'person1', movieId: 'movie3', type: 'ACTED_IN', roles: ['Neo'] },
-      { personId: 'person2', movieId: 'movie3', type: 'ACTED_IN', roles: ['Trinity'] },
-      { personId: 'person3', movieId: 'movie3', type: 'ACTED_IN', roles: ['Morpheus'] },
-      { personId: 'person5', movieId: 'movie3', type: 'DIRECTED', roles: [] },
-      { personId: 'person6', movieId: 'movie3', type: 'DIRECTED', roles: [] },
-      // The Devil's Advocate
-      { personId: 'person1', movieId: 'movie4', type: 'ACTED_IN', roles: ['Kevin Lomax'] },
-      { personId: 'person8', movieId: 'movie4', type: 'ACTED_IN', roles: ['John Milton'] },
-      // A Few Good Men
-      { personId: 'person7', movieId: 'movie5', type: 'ACTED_IN', roles: ['Lt. Daniel Kaffee'] },
-      { personId: 'person8', movieId: 'movie5', type: 'ACTED_IN', roles: ['Col. Nathan R. Jessup'] },
-      { personId: 'person9', movieId: 'movie5', type: 'ACTED_IN', roles: ['Lt. Cdr. JoAnne Galloway'] },
-      { personId: 'person10', movieId: 'movie5', type: 'ACTED_IN', roles: ['Capt. Jack Ross'] },
-      { personId: 'person11', movieId: 'movie5', type: 'ACTED_IN', roles: ['Lt. Jonathan Kendrick'] },
-      // Top Gun
-      { personId: 'person7', movieId: 'movie6', type: 'ACTED_IN', roles: ['Maverick'] },
-      // Jerry Maguire
-      { personId: 'person7', movieId: 'movie7', type: 'ACTED_IN', roles: ['Jerry Maguire'] },
-      { personId: 'person12', movieId: 'movie7', type: 'ACTED_IN', roles: ['Rod Tidwell'] },
-      // Stand By Me
-      { personId: 'person13', movieId: 'movie8', type: 'ACTED_IN', roles: ['Chris Chambers'] },
-      { personId: 'person14', movieId: 'movie8', type: 'ACTED_IN', roles: ['Teddy Duchamp'] },
-      { personId: 'person10', movieId: 'movie8', type: 'ACTED_IN', roles: ['Older Chris Chambers'] },
-      // As Good as It Gets
-      { personId: 'person8', movieId: 'movie9', type: 'ACTED_IN', roles: ['Melvin Udall'] },
-      { personId: 'person12', movieId: 'movie9', type: 'ACTED_IN', roles: ['Frank Sachs'] },
-      // What Dreams May Come
-      { personId: 'person15', movieId: 'movie10', type: 'ACTED_IN', roles: ['Chris Nielsen'] },
-    ];
+    await session.run(`
+      MATCH (p:Person {name: 'Keanu Reeves'}), (m:Movie {title: 'The Matrix Reloaded'})
+      CREATE (p)-[:ACTED_IN {roles: ['Neo']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Carrie-Anne Moss'}), (m:Movie {title: 'The Matrix Reloaded'})
+      CREATE (p)-[:ACTED_IN {roles: ['Trinity']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Laurence Fishburne'}), (m:Movie {title: 'The Matrix Reloaded'})
+      CREATE (p)-[:ACTED_IN {roles: ['Morpheus']}]->(m)
+    `);
 
-    for (const rel of relationships) {
-      if (rel.type === 'ACTED_IN') {
-        await neo4jClient.write(
-          `MATCH (p:Person {id: $personId}), (m:Movie {id: $movieId})
-           CREATE (p)-[:ACTED_IN {roles: $roles}]->(m)`,
-          rel
-        );
-      } else {
-        await neo4jClient.write(
-          `MATCH (p:Person {id: $personId}), (m:Movie {id: $movieId})
-           CREATE (p)-[:${rel.type}]->(m)`,
-          { personId: rel.personId, movieId: rel.movieId }
-        );
-      }
-    }
+    await session.run(`
+      MATCH (p:Person {name: 'Keanu Reeves'}), (m:Movie {title: 'The Matrix Revolutions'})
+      CREATE (p)-[:ACTED_IN {roles: ['Neo']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Carrie-Anne Moss'}), (m:Movie {title: 'The Matrix Revolutions'})
+      CREATE (p)-[:ACTED_IN {roles: ['Trinity']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Laurence Fishburne'}), (m:Movie {title: 'The Matrix Revolutions'})
+      CREATE (p)-[:ACTED_IN {roles: ['Morpheus']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Keanu Reeves'}), (m:Movie {title: "The Devil's Advocate"})
+      CREATE (p)-[:ACTED_IN {roles: ['Kevin Lomax']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Al Pacino'}), (m:Movie {title: "The Devil's Advocate"})
+      CREATE (p)-[:ACTED_IN {roles: ['John Milton']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Charlize Theron'}), (m:Movie {title: "The Devil's Advocate"})
+      CREATE (p)-[:ACTED_IN {roles: ['Mary Ann Lomax']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Tom Cruise'}), (m:Movie {title: 'A Few Good Men'})
+      CREATE (p)-[:ACTED_IN {roles: ['Lt. Daniel Kaffee']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Jack Nicholson'}), (m:Movie {title: 'A Few Good Men'})
+      CREATE (p)-[:ACTED_IN {roles: ['Col. Nathan R. Jessup']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Demi Moore'}), (m:Movie {title: 'A Few Good Men'})
+      CREATE (p)-[:ACTED_IN {roles: ['Lt. Cdr. JoAnne Galloway']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Kevin Bacon'}), (m:Movie {title: 'A Few Good Men'})
+      CREATE (p)-[:ACTED_IN {roles: ['Capt. Jack Ross']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Tom Cruise'}), (m:Movie {title: 'Top Gun'})
+      CREATE (p)-[:ACTED_IN {roles: ['Maverick']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Tom Cruise'}), (m:Movie {title: 'Jerry Maguire'})
+      CREATE (p)-[:ACTED_IN {roles: ['Jerry Maguire']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Cuba Gooding Jr.'}), (m:Movie {title: 'Jerry Maguire'})
+      CREATE (p)-[:ACTED_IN {roles: ['Rod Tidwell']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Renee Zellweger'}), (m:Movie {title: 'Jerry Maguire'})
+      CREATE (p)-[:ACTED_IN {roles: ['Dorothy Boyd']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'River Phoenix'}), (m:Movie {title: 'Stand By Me'})
+      CREATE (p)-[:ACTED_IN {roles: ['Chris Chambers']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Corey Feldman'}), (m:Movie {title: 'Stand By Me'})
+      CREATE (p)-[:ACTED_IN {roles: ['Teddy Duchamp']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Wil Wheaton'}), (m:Movie {title: 'Stand By Me'})
+      CREATE (p)-[:ACTED_IN {roles: ['Gordie Lachance']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Jack Nicholson'}), (m:Movie {title: 'As Good as It Gets'})
+      CREATE (p)-[:ACTED_IN {roles: ['Melvin Udall']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Helen Hunt'}), (m:Movie {title: 'As Good as It Gets'})
+      CREATE (p)-[:ACTED_IN {roles: ['Carol Connelly']}]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Greg Kinnear'}), (m:Movie {title: 'As Good as It Gets'})
+      CREATE (p)-[:ACTED_IN {roles: ['Simon Bishop']}]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Robin Williams'}), (m:Movie {title: 'What Dreams May Come'})
+      CREATE (p)-[:ACTED_IN {roles: ['Chris Nielsen']}]->(m)
+    `);
+
+    // Create DIRECTED relationships
+    console.log('🎥 Creating DIRECTED relationships...');
+    await session.run(`
+      MATCH (p:Person {name: 'Lana Wachowski'}), (m:Movie {title: 'The Matrix'})
+      CREATE (p)-[:DIRECTED]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Lilly Wachowski'}), (m:Movie {title: 'The Matrix'})
+      CREATE (p)-[:DIRECTED]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Lana Wachowski'}), (m:Movie {title: 'The Matrix Reloaded'})
+      CREATE (p)-[:DIRECTED]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Lilly Wachowski'}), (m:Movie {title: 'The Matrix Reloaded'})
+      CREATE (p)-[:DIRECTED]->(m)
+    `);
+
+    await session.run(`
+      MATCH (p:Person {name: 'Lana Wachowski'}), (m:Movie {title: 'The Matrix Revolutions'})
+      CREATE (p)-[:DIRECTED]->(m)
+    `);
+    
+    await session.run(`
+      MATCH (p:Person {name: 'Lilly Wachowski'}), (m:Movie {title: 'The Matrix Revolutions'})
+      CREATE (p)-[:DIRECTED]->(m)
+    `);
 
     // Verify data
-    console.log('✅ Verifying data...');
-    const movieCount = await neo4jClient.read<{ count: number }>(
-      `MATCH (m:Movie) RETURN count(m) as count`
-    );
-    const personCount = await neo4jClient.read<{ count: number }>(
-      `MATCH (p:Person) RETURN count(p) as count`
-    );
-    const relCount = await neo4jClient.read<{ count: number }>(
-      `MATCH ()-[r]->() RETURN count(r) as count`
-    );
+    console.log('✅ Verifying seeded data...');
+    const movieCount = await session.run('MATCH (m:Movie) RETURN count(m) as count');
+    const personCount = await session.run('MATCH (p:Person) RETURN count(p) as count');
+    const relationshipCount = await session.run('MATCH ()-[r]->() RETURN count(r) as count');
 
-    console.log('\n📊 Data Summary:');
-    console.log(`   Movies: ${movieCount[0]?.count || 0}`);
-    console.log(`   People: ${personCount[0]?.count || 0}`);
-    console.log(`   Relationships: ${relCount[0]?.count || 0}`);
+    console.log(`\n📊 Database seeded successfully!`);
+    console.log(`   - Movies: ${movieCount.records[0]?.get('count').toNumber() ?? 0}`);
+    console.log(`   - People: ${personCount.records[0]?.get('count').toNumber() ?? 0}`);
+    console.log(`   - Relationships: ${relationshipCount.records[0]?.get('count').toNumber() ?? 0}`);
+    console.log(`\n🎯 Sample query: MATCH (p:Person)-[r:ACTED_IN]->(m:Movie) RETURN p,r,m LIMIT 25\n`);
 
-    console.log('\n✨ Sample data seeded successfully!');
-    console.log('\n📝 Sample Query:');
-    console.log('   MATCH (p:Person)-[r:ACTED_IN]->(m:Movie) RETURN p,r,m LIMIT 25');
   } catch (error) {
-    console.error('❌ Error seeding data:', error);
+    console.error('❌ Error seeding database:', error);
     throw error;
   } finally {
-    await neo4jClient.close();
+    await session.close();
   }
 }
 
-// Run the script
-// Run the seeding
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-void (async () => {
-  try {
-    await seedData();
-    console.log('✅ Done!');
+// Run seed
+seedDatabase()
+  .then(() => {
+    console.log('✨ Seeding complete!');
     process.exit(0);
-  } catch (error) {
-    console.error('❌ Failed:', error);
+  })
+  .catch((error) => {
+    console.error('💥 Seeding failed:', error);
     process.exit(1);
-  }
-})();
+  })
+  .finally(() => {
+    driver.close();
+  });

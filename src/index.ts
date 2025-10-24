@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { serveStatic } from '@hono/node-server/serve-static';
 import { AppConfig } from './infrastructure/config';
 import { errorHandler, corsMiddleware, logger } from './presentation/middlewares';
 import healthRoutes from './presentation/routes/health.routes';
+import tokenRoutes from './presentation/routes/token.routes';
 import embedRoutes from './presentation/routes/embed.routes';
 import proxyRoutes from './presentation/routes/proxy.routes';
+import docsRoutes from './presentation/routes/docs.routes';
 
 /**
  * Main application
@@ -16,26 +17,29 @@ const app = new Hono();
 app.use('*', logger);
 app.use('*', corsMiddleware);
 
-// Serve static files
-app.use('/public/*', serveStatic({ root: './' }));
-
 // Routes
 app.route('/health', healthRoutes);
-app.route('/embed', embedRoutes);
+app.route('/api/token', tokenRoutes);
+app.route('/api/embed', embedRoutes);
+app.route('/', embedRoutes); // For /view/:token routes
 app.route('/api/proxy', proxyRoutes);
-app.route('/', embedRoutes); // For /api/embed/config routes
+app.route('/api', docsRoutes); // API documentation
 
 // Root endpoint
 app.get('/', (c) => {
   return c.json({
     success: true,
     data: {
-      message: 'Neovis Embed Service API',
+      message: 'Neo4j Embed Service API',
       version: AppConfig.app.version,
       environment: AppConfig.app.env,
       endpoints: {
         health: '/health',
-        docs: '/api-docs',
+        generateToken: 'POST /api/token/generate',
+        createEmbed: 'POST /api/embed',
+        viewEmbed: 'GET /view/:token',
+        proxyQuery: 'POST /api/proxy/query',
+        docs: '/api (API Documentation)',
       },
     },
   });

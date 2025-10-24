@@ -19,7 +19,8 @@
     "test:e2e": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js tests/e2e",
     "seed": "tsx src/scripts/seed.ts",
     "seed:clean": "tsx src/scripts/cleanup.ts",
-    "test:embed": "tsx src/scripts/test-embed.ts"
+    "test:embed": "tsx src/scripts/test-embed.ts",
+    "serve:test": "tsx src/scripts/serve-test.ts"
   },
   "keywords": [
     "hono",
@@ -33,8 +34,10 @@
   "license": "MIT",
   "dependencies": {
     "@hono/node-server": "^1.19.5",
+    "@hono/swagger-ui": "^0.5.2",
     "@types/uuid": "^11.0.0",
     "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.4.1",
     "dotenv": "^16.4.5",
     "hono": "^4.6.3",
     "jsonwebtoken": "^9.0.2",

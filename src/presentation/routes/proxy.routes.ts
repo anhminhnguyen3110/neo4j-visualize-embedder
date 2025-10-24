@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { Neo4jProxyController } from '../controllers/Neo4jProxyController';
+import { ProxyController } from '../controllers';
 
 const proxyRouter = new Hono();
 
 /**
- * POST /api/proxy/neo4j
+ * POST /api/proxy/query
  * Execute a Cypher query through the proxy
  */
-proxyRouter.post('/neo4j', (c) => Neo4jProxyController.executeQuery(c));
+proxyRouter.post('/query', (c) => ProxyController.executeQuery(c));
 
 export default proxyRouter;

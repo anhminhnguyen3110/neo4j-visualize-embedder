@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Neo4j Production Database
+  # ============================================
+  neo4j:
+    image: neo4j:5.14-community
+    container_name: neo4j-prod
+    hostname: neo4j
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    environment:
+      - NEO4J_AUTH=neo4j/your-secure-password
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_memory_heap_initial__size=512M
+      - NEO4J_dbms_memory_heap_max__size=2G
+      - NEO4J_dbms_memory_pagecache_size=512M
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ============================================
+  # Hono Application
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: hono-neo4j-app
+    hostname: app
+    ports:
+      - "3000:3000"
+    environment:
+      # Application
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      
+      # Neo4j Database
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=your-secure-password
+      - NEO4J_DATABASE=neo4j
+      
+      # JWT (CHANGE THESE IN PRODUCTION!)
+      - JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long
+      - JWT_EXPIRATION=7d
+      - JWT_ALGORITHM=HS256
+      
+      # Security
+      - BCRYPT_SALT_ROUNDS=12
+      
+      # CORS
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+      
+      # Embed
+      - EMBED_BASE_URL=http://localhost:3000
+      - MAX_TOKEN_EXPIRY_DAYS=90
+      - DEFAULT_TOKEN_EXPIRY_DAYS=7
+      
+      # Logging
+      - LOG_LEVEL=info
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  app-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+  neo4j_plugins:
+    driver: local

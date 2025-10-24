@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo4j Embed Tester</title>
+	<link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Neo4j Embed Tester</h1>
+            <p>Test the complete embed workflow</p>
+        </header>
+
+        <!-- Section 1: Generate API Token -->
+        <section class="card">
+            <h2>1️⃣ Generate API Token</h2>
+            <p class="description">First, generate an authentication token for API access</p>
+            
+            <button id="generateTokenBtn" class="btn btn-primary">Generate Token</button>
+            
+            <div id="tokenResult" class="result-box hidden">
+                <label>API Token:</label>
+                <div class="token-display">
+                    <input type="text" id="tokenValue" readonly>
+                    <button id="copyTokenBtn" class="btn btn-small">Copy</button>
+                </div>
+                <div class="meta-info">
+                    <span>Expires: <strong id="tokenExpiry"></strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Create Embed URL -->
+        <section class="card">
+            <h2>2️⃣ Create Embed URL</h2>
+            <p class="description">Use your token to create an embeddable visualization</p>
+            
+            <div class="form-group">
+                <label for="apiToken">API Token:</label>
+                <input type="text" id="apiToken" placeholder="Paste your token from step 1">
+            </div>
+
+            <div class="form-group">
+                <label for="cypherQuery">Cypher Query:</label>
+                <textarea 
+                    id="cypherQuery" 
+                    rows="4" 
+                    placeholder="MATCH (n) RETURN n LIMIT 25">MATCH (p:Person)-[r:ACTED_IN]->(m:Movie) RETURN p,r,m LIMIT 25</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="expiresInDays">Expires In (days):</label>
+                <input type="number" id="expiresInDays" value="7" min="1" max="365">
+            </div>
+
+            <button id="createEmbedBtn" class="btn btn-primary">Create Embed URL</button>
+
+            <div id="embedResult" class="result-box hidden">
+                <label>Embed URL:</label>
+                <div class="token-display">
+                    <input type="text" id="embedUrl" readonly>
+                    <button id="copyEmbedBtn" class="btn btn-small">Copy</button>
+                    <button id="openEmbedBtn" class="btn btn-small btn-success">Open</button>
+                </div>
+                <div class="meta-info">
+                    <span>Embed Token: <code id="embedToken"></code></span>
+                    <span>Expires: <strong id="embedExpiry"></strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: View Visualization -->
+        <section class="card">
+            <h2>3️⃣ View Visualization</h2>
+            <p class="description">Preview the embedded visualization</p>
+            
+            <div class="form-group">
+                <label for="viewUrl">Embed URL:</label>
+                <div class="token-display">
+                    <input type="text" id="viewUrl" placeholder="Paste embed URL to preview">
+                    <button id="loadVisualizationBtn" class="btn btn-small btn-success">Load</button>
+                </div>
+            </div>
+
+            <div id="visualizationPreview" class="hidden">
+                <iframe id="embedFrame" frameborder="0"></iframe>
+            </div>
+        </section>
+
+        <!-- Logs Section -->
+        <section class="card">
+            <h2>📋 Request Logs</h2>
+            <div id="logs" class="logs"></div>
+            <button id="clearLogsBtn" class="btn btn-small">Clear Logs</button>
+        </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
