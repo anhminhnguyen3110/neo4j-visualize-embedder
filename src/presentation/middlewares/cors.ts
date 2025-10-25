@@ -2,10 +2,10 @@ import { cors as honoCors } from 'hono/cors';
 
 /**
  * CORS middleware configuration
- * WARNING: Allows all origins - for development/testing only
+ * Allows all origins for development/testing
  */
 export const corsMiddleware = honoCors({
-  origin: '*', // Allow all origins
+  origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   exposeHeaders: ['Content-Length', 'X-Request-Id'],

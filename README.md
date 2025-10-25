@@ -1,136 +1,171 @@
-# 🚀 Hono + Neo4j Embed Application
+# � Neo4j Embedder
 
-Neovis.js embeddable iframe generation with signed tokens using Hono and Neo4j.
+Create embeddable Neo4j graph visualizations with secure token-based access.
+
+![Test UI](docs/images/ui.png)
+
+## 🎯 What is this?
+
+Generate shareable Neo4j graph visualizations in 3 steps:
+1. **Generate API Token** - Get JWT for authentication
+2. **Create Embed URL** - Add Cypher query, get shareable link
+3. **View Graph** - Interactive visualization with Vis.js
+
+Perfect for dashboards, reports, or sharing Neo4j data without database access.
 
 ## ✨ Features
 
-- 🔐 JWT-based embed token authentication
-- 📊 Neo4j graph database integration
-- 🎨 Neovis.js visualization support
-- 🐳 Full Docker support with multi-stage builds
-- 🧪 E2E testing with isolated test database
-- 📦 Clean architecture with TypeScript
+- 🔐 JWT + Embed Token authentication
+- 📊 Read-only Neo4j queries via proxy
+- 🎨 Interactive Vis.js graph visualization
+- ⏰ Time-limited embed tokens (SQLite)
+- 🚀 Fast Hono framework
+- 📦 Clean architecture (routes → controllers → services → repos)
 
 ## 📋 Prerequisites
 
-### Local Development
 - Node.js 20+
+- Neo4j 5.14+ (bolt://localhost:7687)
 - pnpm 8+
-- Neo4j 5.14+ (or use Docker)
-
-### Docker Deployment
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-- 4GB+ RAM
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended)
-
 ```bash
-# Start all services (app + Neo4j)
-pnpm docker:up
-
-# Seed sample data
-docker-compose exec app pnpm seed
-
-# View logs
-pnpm docker:logs
-
-# Stop services
-pnpm docker:down
-```
-
-Access:
-- Application: <http://localhost:3000>
-- Neo4j Browser: <http://localhost:7474>
-- Health Check: <http://localhost:3000/health>
-
-### Option 2: Local Development
-
-```bash
-# Install dependencies
+# 1. Install
 pnpm install
 
-# Setup environment
-cp .env.example .env
-# Edit .env with your configuration
+# 2. Configure .env
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
+JWT_SECRET=your-32-char-secret-key
+ALLOWED_ORIGINS=http://localhost:3000
+EMBED_BASE_URL=http://localhost:3000
 
-# Start Neo4j (via Docker)
-docker-compose up -d neo4j
-
-# Run development server
+# 3. Run
 pnpm dev
-
-# Seed sample data
-pnpm seed
 ```
 
-## 🧪 Testing
+Server: <http://localhost:3000>
 
-### Local Testing
+## � How It Works
+
+### Step 1: Generate API Token
+
+![Generate Token](docs/images/Generate_API_Token.png)
 
 ```bash
-# Run all tests
-pnpm test
-
-# E2E tests
-pnpm test:e2e
-
-# With coverage
-pnpm test:coverage
-
-# Watch mode
-pnpm test:watch
+POST /api/token/generate
+# Returns JWT (valid 24h)
 ```
 
-### Docker Testing
+### Step 2: Create Embed URL
+
+![Create Embed](docs/images/Create_Embed_URL.png)
 
 ```bash
-# Linux/Mac
-pnpm docker:test
-
-# Windows
-pnpm docker:test:win
+POST /api/embed
+Authorization: Bearer <jwt>
+{
+  "cypher": "MATCH (p:Person)-[r:ACTED_IN]->(m:Movie) RETURN p,r,m LIMIT 25",
+  "expiresInDays": 7
+}
+# Returns: http://localhost:3000/view/{token}
 ```
 
-Tests automatically:
-- ✅ Start isolated Neo4j test database
-- ✅ Seed test data
-- ✅ Run E2E tests
-- ✅ Cleanup after completion
+### Step 3: View Graph
 
-## 📁 Project Structure
+![Graph Visualization](docs/images/Graph.png)
 
-```
-hono-neo4j/
-├── src/
-│   ├── domain/              # Business entities
-│   │   └── entities/        # User, Visualization, EmbedToken
-│   ├── infrastructure/      # External services
-│   │   ├── config/          # App configuration
-│   │   ├── database/        # Neo4j client
-│   │   ├── repositories/    # Data access layer
-│   │   └── services/        # Auth, JWT, Password
-│   ├── models/              # Types, enums, errors
-│   ├── presentation/        # HTTP layer
-│   │   ├── controllers/     # Request handlers
-│   │   ├── middlewares/     # CORS, error handling
-│   │   └── routes/          # API routes
-│   ├── scripts/             # Seed & cleanup scripts
-│   └── index.ts             # Application entry
-├── tests/
-│   ├── e2e/                 # End-to-end tests
-│   ├── helpers/             # Test utilities
-│   └── README.md            # Testing guide
-├── public/
-│   └── embed.html           # Visualization embed page
-├── docker-compose.yml       # Docker orchestration
-├── Dockerfile               # Multi-stage build
-└── DOCKER.md                # Docker documentation
+Share the URL - visualization auto-executes the pre-defined query.
+
+### Request Logs
+
+![Logs](docs/images/request_logs.png)
+
+Track all API calls with full request/response details.
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/health` | None | Health check |
+| `POST` | `/api/token/generate` | None | Get JWT token |
+| `POST` | `/api/embed` | JWT | Create embed URL |
+| `GET` | `/view/:token` | None | View visualization |
+| `POST` | `/api/proxy/query` | Embed Token | Execute query |
+| `GET` | `/api/swagger` | None | API docs |
+
+## 🧪 Test UI
+
+```bash
+# Open test frontend
+start fe-example/index.html
+
+# Or serve with Python
+cd fe-example && python -m http.server 8080
 ```
 
-## 🔧 Configuration
+## 🗂️ Project Structure
+
+```
+src/
+├── domain/entities/           # EmbedToken entity
+├── infrastructure/
+│   ├── database/             # SQLite client
+│   ├── repositories/         # EmbedTokenRepository
+│   └── services/             # JWTService, Neo4jQueryService
+└── presentation/
+    ├── controllers/          # Token, Embed, Proxy, Health
+    ├── middlewares/          # Auth, CORS, Error
+    └── routes/               # API routes
+```
+
+## 🔒 Security
+
+- **JWT Auth**: API requires bearer tokens
+- **Embed Tokens**: Unique, time-limited, stored in SQLite
+- **Read-Only**: Neo4j queries execute in read mode
+- **Query Lock**: Tokens store queries (no injection)
+- **Auto Expiry**: Tokens expire automatically
+
+## 🛠️ Development
+
+```bash
+pnpm dev         # Start with hot reload
+pnpm build       # Build TypeScript
+pnpm lint        # ESLint check
+```
+
+## 📝 Environment Variables
+
+```env
+NEO4J_URI=bolt://localhost:7687      # Required
+NEO4J_USER=neo4j                      # Required
+NEO4J_PASSWORD=password               # Required
+JWT_SECRET=min-32-chars               # Required
+SQLITE_DB_PATH=./data/embedder.db     # Optional
+ALLOWED_ORIGINS=http://localhost:3000 # Required
+EMBED_BASE_URL=http://localhost:3000  # Required
+PORT=3000                             # Optional
+```
+
+## 📚 Tech Stack
+
+- [Hono](https://hono.dev/) - Web framework
+- [Neo4j](https://neo4j.com/) - Graph database
+- [SQLite](https://sqlite.org/) - Token storage
+- [Vis.js](https://visjs.org/) - Graph rendering
+- TypeScript + Zod
+
+## 📄 License
+
+MIT
+
+---
+
+Made with ❤️ using Hono + Neo4j
+
 
 ### Environment Variables
 

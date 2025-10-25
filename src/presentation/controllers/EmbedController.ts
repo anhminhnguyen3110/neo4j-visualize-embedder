@@ -5,8 +5,8 @@ import { AppConfig } from '@infrastructure/config';
 import { html } from 'hono/html';
 
 interface CreateEmbedRequest {
-  cypher: string;
-  expiresIn?: number; // in seconds, default 3600 (1 hour)
+  cypherQuery: string;
+  expiresInDays?: number; // in days, default 1 day
 }
 
 /**
@@ -23,7 +23,7 @@ export class EmbedController {
       const body = await c.req.json<CreateEmbedRequest>();
 
       // Validate cypher query
-      if (!body.cypher || typeof body.cypher !== 'string' || body.cypher.trim() === '') {
+      if (!body.cypherQuery || typeof body.cypherQuery !== 'string' || body.cypherQuery.trim() === '') {
         return c.json(
           {
             success: false,
@@ -36,8 +36,9 @@ export class EmbedController {
         );
       }
 
-      // Calculate expiration (default 1 hour)
-      const expiresIn = body.expiresIn ?? 3600;
+      // Calculate expiration (default 1 day)
+      const expiresInDays = body.expiresInDays ?? 1;
+      const expiresIn = expiresInDays * 24 * 60 * 60; // Convert days to seconds
       const expiresAt = new Date();
       expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
@@ -49,7 +50,7 @@ export class EmbedController {
       EmbedTokenRepository.create({
         id,
         embedToken,
-        cypherQuery: body.cypher.trim(),
+        cypherQuery: body.cypherQuery.trim(),
         expiresAt,
       });
 

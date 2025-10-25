@@ -1,4 +1,3 @@
-// DOM Elements
 const generateTokenBtn = document.getElementById('generateTokenBtn');
 const tokenResult = document.getElementById('tokenResult');
 const tokenValue = document.getElementById('tokenValue');
@@ -137,8 +136,8 @@ createEmbedBtn.addEventListener('click', async () => {
         createEmbedBtn.textContent = 'Creating...';
         
         const requestBody = {
-            cypher: query,
-            expiresIn: expiresInDays * 24 * 60 * 60, // Convert days to seconds
+            cypherQuery: query,
+            expiresInDays: expiresInDays,
         };
         
         const response = await fetch(API_ENDPOINTS.CREATE_EMBED, {
