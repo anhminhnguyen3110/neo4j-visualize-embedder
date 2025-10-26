@@ -85,18 +85,15 @@ export class EmbedController {
         return c.html(expiredHtml, 410);
       }
 
-      // Read and serve the embed.html template
       try {
         const embedHtmlPath = join(process.cwd(), 'public', 'embed.html');
         let htmlContent = readFileSync(embedHtmlPath, 'utf-8');
         
-        // Replace the token placeholder in the HTML
         htmlContent = htmlContent.replace(
           /const token = urlParams\.get\('token'\) \|\| globalThis\.location\.pathname\.split\('\/'\)\.pop\(\);/,
           `const token = '${token}';`
         );
         
-        // Update API calls to use the correct endpoints
         htmlContent = htmlContent.replaceAll(
           '/api/embed/config/${token}',
           '/api/proxy/query'

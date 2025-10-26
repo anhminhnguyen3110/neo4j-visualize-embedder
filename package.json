@@ -13,7 +13,6 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
-    "seed": "tsx src/scripts/seed.ts",
     "serve:test": "tsx src/scripts/serve-test.ts"
   },
   "keywords": [

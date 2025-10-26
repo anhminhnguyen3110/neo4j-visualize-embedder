@@ -20,9 +20,6 @@ export interface GraphData {
   relationships: Neo4jRelationship[];
 }
 
-/**
- * Neo4j Query Service - READ-ONLY operations
- */
 export class Neo4jQueryService {
   private static instance: Neo4jQueryService;
   private readonly driver: Driver;
@@ -46,9 +43,6 @@ export class Neo4jQueryService {
     return Neo4jQueryService.instance;
   }
 
-  /**
-   * Execute a READ-ONLY Cypher query
-   */
   async executeQuery(cypher: string, params: Record<string, unknown> = {}): Promise<GraphData> {
     const session: Session = this.driver.session({
       defaultAccessMode: neo4j.session.READ,
@@ -62,7 +56,6 @@ export class Neo4jQueryService {
 
       for (const record of result.records) {
         for (const value of record.values()) {
-          // Handle Node
           if (neo4j.isNode(value)) {
             const nodeId = value.identity.toString();
             if (!nodes.has(nodeId)) {
@@ -74,7 +67,6 @@ export class Neo4jQueryService {
             }
           }
 
-          // Handle Relationship
           if (neo4j.isRelationship(value)) {
             relationships.push({
               id: value.identity.toString(),
@@ -83,12 +75,8 @@ export class Neo4jQueryService {
               endNode: value.end.toString(),
               properties: this.serializeProperties(value.properties),
             });
-
-            // Ensure start and end nodes are in the nodes map
-            // (they might not be if query returns only relationships)
           }
 
-          // Handle Path
           if (neo4j.isPath(value)) {
             for (const segment of value.segments) {
               const startNodeId = segment.start.identity.toString();
@@ -131,9 +119,6 @@ export class Neo4jQueryService {
     }
   }
 
-  /**
-   * Verify Neo4j connectivity
-   */
   async verifyConnectivity(): Promise<boolean> {
     try {
       await this.driver.verifyConnectivity();
@@ -145,9 +130,6 @@ export class Neo4jQueryService {
     }
   }
 
-  /**
-   * Serialize Neo4j properties to JSON-compatible format
-   */
   private serializeProperties(properties: Record<string, unknown>): Record<string, unknown> {
     const serialized: Record<string, unknown> = {};
 
@@ -164,9 +146,6 @@ export class Neo4jQueryService {
     return serialized;
   }
 
-  /**
-   * Close driver connection
-   */
   async close(): Promise<void> {
     await this.driver.close();
   }

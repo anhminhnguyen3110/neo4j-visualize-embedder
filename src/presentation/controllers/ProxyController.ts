@@ -6,15 +6,7 @@ interface ProxyQueryRequest {
   token: string;
 }
 
-/**
- * Proxy Controller
- * Executes Cypher queries on behalf of the browser
- */
 export class ProxyController {
-  /**
-   * Execute a Cypher query via proxy
-   * POST /api/proxy/query
-   */
   static async executeQuery(c: Context): Promise<Response> {
     try {
       const body = await c.req.json<ProxyQueryRequest>();
@@ -33,7 +25,6 @@ export class ProxyController {
         );
       }
 
-      // Validate embedToken from SQLite
       const embedToken = EmbedTokenRepository.findByToken(token);
 
       if (!embedToken) {
@@ -49,7 +40,6 @@ export class ProxyController {
         );
       }
 
-      // Check if expired
       if (embedToken.isExpired()) {
         return c.json(
           {
@@ -63,7 +53,6 @@ export class ProxyController {
         );
       }
 
-      // Execute Cypher query from database
       const graphData = await neo4jQueryService.executeQuery(embedToken.cypherQuery);
 
       return c.json({

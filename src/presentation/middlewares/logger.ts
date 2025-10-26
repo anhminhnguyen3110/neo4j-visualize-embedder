@@ -1,9 +1,6 @@
 import { Context, Next } from 'hono';
 import { AppConfig } from '@infrastructure/config';
 
-/**
- * Request logger middleware
- */
 export async function logger(c: Context, next: Next) {
   const start = Date.now();
   const method = c.req.method;

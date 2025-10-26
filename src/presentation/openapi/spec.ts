@@ -1,6 +1,3 @@
-/**
- * OpenAPI 3.0 Specification for Neovis Embed Service
- */
 export const openApiSpec = {
   openapi: '3.0.0',
   info: {

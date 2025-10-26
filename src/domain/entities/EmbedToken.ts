@@ -7,16 +7,10 @@ export class EmbedToken {
     public createdAt: Date
   ) {}
 
-  /**
-   * Check if token is expired
-   */
   public isExpired(): boolean {
     return new Date() > this.expiresAt;
   }
 
-  /**
-   * Check if token is valid (not expired)
-   */
   public isValid(): boolean {
     return !this.isExpired();
   }

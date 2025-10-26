@@ -8,16 +8,11 @@ import embedRoutes from './presentation/routes/embed.routes';
 import proxyRoutes from './presentation/routes/proxy.routes';
 import docsRoutes from './presentation/routes/docs.routes';
 
-/**
- * Main application
- */
 const app = new Hono();
 
-// Global middleware
 app.use('*', logger);
 app.use('*', corsMiddleware);
 
-// Handle all OPTIONS requests (preflight)
 app.options('*', (c) => {
   return c.text('', 200, {
     'Access-Control-Allow-Origin': '*',
@@ -69,10 +64,8 @@ app.notFound((c) => {
   );
 });
 
-// Error handler (must be last)
 app.onError(errorHandler);
 
-// Start server
 const port = AppConfig.app.port;
 const host = AppConfig.app.host;
 
@@ -90,7 +83,6 @@ serve(
     hostname: host,
   },
   () => {
-    // Server started callback
     // eslint-disable-next-line no-console
     console.log(`✅ Server running at http://${host}:${port}`);
   }

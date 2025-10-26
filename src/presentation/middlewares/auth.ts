@@ -1,10 +1,6 @@
 import { Context, Next } from 'hono';
 import { JWTService } from '@infrastructure/services';
 
-/**
- * JWT Authentication Middleware
- * Validates JWT token from Authorization header
- */
 export const jwtAuth = async (c: Context, next: Next): Promise<Response | void> => {
   const authHeader = c.req.header('Authorization');
 
@@ -26,7 +22,6 @@ export const jwtAuth = async (c: Context, next: Next): Promise<Response | void> 
   try {
     const payload = JWTService.verifyToken(token);
     
-    // Store payload in context for use in controllers
     c.set('jwtPayload', payload);
     
     await next();

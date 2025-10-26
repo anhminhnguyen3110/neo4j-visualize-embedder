@@ -1,9 +1,5 @@
 import { env } from './env';
 
-/**
- * Application configuration object
- * Centralized configuration for the entire application
- */
 export const AppConfig = {
   app: {
     name: 'Neovis Embed Service',

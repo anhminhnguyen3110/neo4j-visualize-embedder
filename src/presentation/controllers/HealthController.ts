@@ -3,21 +3,12 @@ import { neo4jQueryService } from '@infrastructure/services';
 import { sqliteClient } from '@infrastructure/database';
 import { AppConfig } from '@infrastructure/config';
 
-/**
- * Health check controller
- */
 export class HealthController {
-  /**
-   * GET /health
-   * Check application health and database connectivity
-   */
   static async check(c: Context) {
     const startTime = Date.now();
 
-    // Check Neo4j connectivity
     const isNeo4jConnected = await neo4jQueryService.verifyConnectivity();
 
-    // Check SQLite connectivity
     const isSQLiteConnected = sqliteClient.verifyConnectivity();
 
     const responseTime = Date.now() - startTime;

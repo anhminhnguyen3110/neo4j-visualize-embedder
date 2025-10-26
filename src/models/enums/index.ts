@@ -1,7 +1,3 @@
-/**
- * Enums used across the application
- */
-
 export enum VisualizationType {
   FORCE_DIRECTED = 'force_directed',
   HIERARCHICAL = 'hierarchical',

@@ -8,13 +8,7 @@ export interface CreateEmbedTokenDto {
   expiresAt: Date;
 }
 
-/**
- * Repository for EmbedToken operations (SQLite only)
- */
 export class EmbedTokenRepository {
-  /**
-   * Create a new embed token
-   */
   static create(dto: CreateEmbedTokenDto): EmbedToken {
     const db = sqliteClient.getDb();
     
@@ -30,7 +24,6 @@ export class EmbedTokenRepository {
       dto.expiresAt.toISOString()
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return new EmbedToken(
       dto.id,
       dto.embedToken,
@@ -40,9 +33,6 @@ export class EmbedTokenRepository {
     );
   }
 
-  /**
-   * Find embed token by token string
-   */
   static findByToken(token: string): EmbedToken | null {
     const db = sqliteClient.getDb();
     
@@ -66,7 +56,6 @@ export class EmbedTokenRepository {
       return null;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return new EmbedToken(
       row.id,
       row.embed_token,
@@ -74,51 +63,5 @@ export class EmbedTokenRepository {
       new Date(row.expires_at),
       new Date(row.created_at)
     );
-  }
-
-  /**
-   * Delete expired tokens
-   */
-  static deleteExpired(): number {
-    const db = sqliteClient.getDb();
-    
-    const stmt = db.prepare(`
-      DELETE FROM embed_tokens
-      WHERE datetime(expires_at) <= datetime('now')
-    `);
-
-    const result = stmt.run();
-    return result.changes;
-  }
-
-  /**
-   * Delete token by token string
-   */
-  static deleteByToken(token: string): boolean {
-    const db = sqliteClient.getDb();
-    
-    const stmt = db.prepare(`
-      DELETE FROM embed_tokens
-      WHERE embed_token = ?
-    `);
-
-    const result = stmt.run(token);
-    return result.changes > 0;
-  }
-
-  /**
-   * Count all active tokens (not expired)
-   */
-  static countActive(): number {
-    const db = sqliteClient.getDb();
-    
-    const stmt = db.prepare(`
-      SELECT COUNT(*) as count
-      FROM embed_tokens
-      WHERE datetime(expires_at) > datetime('now')
-    `);
-
-    const result = stmt.get() as { count: number };
-    return result.count;
   }
 }

@@ -12,13 +12,7 @@ interface JWTPayload {
   [key: string]: unknown;
 }
 
-/**
- * JWT Service for token generation and verification
- */
 export class JWTService {
-  /**
-   * Generate JWT token
-   */
   static generateToken(payload: JWTPayload): string {
     const options: SignOptions = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
@@ -28,9 +22,6 @@ export class JWTService {
     return jwt.sign(payload, AppConfig.auth.jwtSecret, options);
   }
 
-  /**
-   * Verify and decode JWT token
-   */
   static verifyToken(token: string): JWTPayload {
     try {
       const decoded = jwt.verify(token, AppConfig.auth.jwtSecret, {
@@ -49,9 +40,6 @@ export class JWTService {
     }
   }
 
-  /**
-   * Decode token without verification (for debugging)
-   */
   static decodeToken(token: string): JWTPayload | null {
     try {
       return jwt.decode(token) as JWTPayload;

@@ -2,13 +2,9 @@ import { Context, ErrorHandler } from 'hono';
 import { AppError } from '@models/errors';
 import { ZodError } from 'zod';
 
-/**
- * Global error handler middleware
- */
 export const errorHandler: ErrorHandler = (err, c: Context) => {
   const error = err as Error;
   
-  // Handle Zod validation errors
   if (error instanceof ZodError) {
     return c.json(
       {
@@ -23,7 +19,6 @@ export const errorHandler: ErrorHandler = (err, c: Context) => {
     );
   }
 
-  // Handle custom AppError
   if (error instanceof AppError) {
     const statusCode = error.statusCode;
     return c.json(
@@ -38,8 +33,6 @@ export const errorHandler: ErrorHandler = (err, c: Context) => {
     );
   }
 
-  // Handle unknown errors
-  // eslint-disable-next-line no-console
   console.error('Unhandled error:', error);
   return c.json(
     {

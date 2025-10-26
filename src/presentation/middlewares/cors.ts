@@ -1,9 +1,5 @@
 import { cors as honoCors } from 'hono/cors';
 
-/**
- * CORS middleware configuration
- * Allows all origins for development/testing
- */
 export const corsMiddleware = honoCors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
