@@ -17,6 +17,16 @@ const app = new Hono();
 app.use('*', logger);
 app.use('*', corsMiddleware);
 
+// Handle all OPTIONS requests (preflight)
+app.options('*', (c) => {
+  return c.text('', 200, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, X-Requested-With, Accept, Origin',
+    'Access-Control-Max-Age': '86400',
+  });
+});
+
 // Routes
 app.route('/health', healthRoutes);
 app.route('/api/token', tokenRoutes);

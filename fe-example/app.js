@@ -74,8 +74,11 @@ generateTokenBtn.addEventListener('click', async () => {
         
         const response = await fetch(API_ENDPOINTS.GENERATE_TOKEN, {
             method: 'POST',
+            mode: 'cors',
+            credentials: 'omit',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
             },
             body: JSON.stringify({}),
         });
@@ -97,7 +100,7 @@ generateTokenBtn.addEventListener('click', async () => {
         }
     } catch (error) {
         console.error('Error generating token:', error);
-        alert('Error generating token: ' + error.message);
+        alert(API_ENDPOINTS.GENERATE_TOKEN);
         logRequest('POST', API_ENDPOINTS.GENERATE_TOKEN, 0, {}, { error: error.message });
     } finally {
         generateTokenBtn.disabled = false;
@@ -142,9 +145,12 @@ createEmbedBtn.addEventListener('click', async () => {
         
         const response = await fetch(API_ENDPOINTS.CREATE_EMBED, {
             method: 'POST',
+            mode: 'cors',
+            credentials: 'omit',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
             },
             body: JSON.stringify(requestBody),
         });
@@ -211,7 +217,3 @@ loadVisualizationBtn.addEventListener('click', () => {
 clearLogsBtn.addEventListener('click', () => {
     logs.innerHTML = '';
 });
-
-// Initialize
-console.log('Neo4j Embed Tester initialized');
-console.log('API Base URL:', API_BASE_URL);

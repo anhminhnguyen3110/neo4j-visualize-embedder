@@ -17,12 +17,44 @@
       background: #1a1a1a;
       color: #fff;
       overflow: hidden;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Light mode styles */
+    body.light {
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    body.light #viz {
+      background: #ffffff;
+    }
+
+    body.light .controls {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    body.light .info {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    body.light #detail-popup {
+      background: #fff;
+      color: #333;
+    }
+
+    body.light #detail-content {
+      background: #f8f8f8;
+      color: #333;
     }
 
     #viz {
       width: 100vw;
       height: 100vh;
       background: #2a2a2a;
+      transition: background-color 0.3s;
     }
 
     #loading {
@@ -124,9 +156,25 @@
 
   <div id="viz"></div>
 
+  <div id="detail-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#222;color:#fff;padding:24px 32px;border-radius:10px;z-index:200;min-width:320px;max-width:90vw;box-shadow:0 4px 24px #000a;">
+    <div id="detail-title" style="font-weight:bold;font-size:18px;margin-bottom:8px;"></div>
+    <pre id="detail-content" style="background:#111;padding:12px;border-radius:6px;max-height:300px;overflow:auto;font-size:14px;"></pre>
+    <button onclick="copyDetail()" style="margin-top:8px;background:#4CAF50;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">Copy</button>
+    <button onclick="closeDetail()" style="margin-top:8px;margin-left:8px;background:#888;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">Close</button>
+  </div>
+
   <div class="controls">
-    <button onclick="stabilize()">Stabilize</button>
-    <button onclick="reload()">Reload</button>
+    <input type="text" id="search-node" placeholder="Search node by name/id" style="margin-right:8px;padding:8px;border-radius:4px;border:none;width:160px;">
+    <button onclick="searchNode()">🔍 Search</button>
+    <button onclick="exportJSON()">💾 Export JSON</button>
+    <button onclick="exportCSV()">💾 Export CSV</button>
+    <button onclick="exportPNG(false)">🖼️ Export PNG (viewport)</button>
+    <button onclick="exportPNG(true)">🖼️ Export PNG (full graph)</button>
+    <button onclick="toggleTheme()" id="theme-btn">🌙 Light Mode</button>
+    <button onclick="zoomToFit()">🔎 Zoom to Fit</button>
+    <button onclick="resetView()">🔄 Reset View</button>
+    <button onclick="stabilize()">⚡ Stabilize</button>
+    <button onclick="reload()">⟳ Reload</button>
   </div>
 
   <div class="info">
@@ -135,32 +183,190 @@
   </div>
 
   <script>
+    // Global variables
+    let network = null;
+    let nodes = null;
+    let edges = null;
+    let currentEmbedToken = null;
+    let isDarkMode = true;
+
+    // Export PNG
+    function exportPNG(full) {
+      if (!network) return;
+      
+      try {
+        // Get canvas element from vis.js network
+        const canvas = network.canvas.body.container.getElementsByTagName('canvas')[0];
+        if (!canvas) {
+          alert('Cannot access canvas for export');
+          return;
+        }
+
+        if (full) {
+          // Temporarily fit all nodes, then export
+          const currentView = network.getViewPosition();
+          const currentScale = network.getScale();
+          
+          network.fit({ animation: false });
+          
+          setTimeout(() => {
+            const dataURL = canvas.toDataURL('image/png');
+            downloadImage(dataURL, 'graph-full.png');
+            
+            // Restore original view
+            network.moveTo({ 
+              position: currentView, 
+              scale: currentScale, 
+              animation: false 
+            });
+          }, 500);
+        } else {
+          const dataURL = canvas.toDataURL('image/png');
+          downloadImage(dataURL, 'graph-viewport.png');
+        }
+      } catch (error) {
+        console.error('PNG export error:', error);
+        alert('Failed to export PNG: ' + error.message);
+      }
+    }
+    function downloadImage(dataURL, filename) {
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    // Export JSON
+    function exportJSON() {
+      if (!nodes || !edges) return;
+      const data = {
+        nodes: nodes.get(),
+        edges: edges.get()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'graph.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Export CSV
+    function exportCSV() {
+      if (!nodes || !edges) return;
+      let csv = 'type,id,label,props,from,to\n';
+      nodes.get().forEach(node => {
+        csv += `node,${node.id},"${node.label}","${JSON.stringify(node)}",,,\n`;
+      });
+      edges.get().forEach(edge => {
+        csv += `edge,${edge.id},"${edge.label}","${JSON.stringify(edge)}",${edge.from},${edge.to}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'graph.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    // Layout change logic removed as requested
+  let initialView = null;
+    // Detail popup logic
+    function showDetail(title, content) {
+      document.getElementById('detail-title').textContent = title;
+      document.getElementById('detail-content').textContent = content;
+      document.getElementById('detail-popup').style.display = 'block';
+    }
+    function closeDetail() {
+      document.getElementById('detail-popup').style.display = 'none';
+    }
+    function copyDetail() {
+      const text = document.getElementById('detail-content').textContent;
+      navigator.clipboard.writeText(text);
+    }
+    // Theme toggle logic
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.getElementById('theme-btn');
+      isDarkMode = !isDarkMode;
+      
+      if (isDarkMode) {
+        body.classList.remove('light');
+        btn.textContent = '🌙 Light Mode';
+        
+        // Update edge font colors for dark mode
+        if (network) {
+          network.setOptions({
+            edges: {
+              font: {
+                color: '#ffffff',
+                background: 'rgba(0,0,0,0.8)',
+                strokeColor: '#000000'
+              }
+            }
+          });
+        }
+      } else {
+        body.classList.add('light');
+        btn.textContent = '☀️ Dark Mode';
+        
+        // Update edge font colors for light mode
+        if (network) {
+          network.setOptions({
+            edges: {
+              font: {
+                color: '#000000',
+                background: 'rgba(255,255,255,0.9)',
+                strokeColor: '#ffffff'
+              }
+            }
+          });
+        }
+      }
+    }
+
+    // Zoom to fit function
+    function zoomToFit() {
+      if (network) {
+        network.fit({ animation: true });
+      }
+    }
+
+    // Reset view function
+    function resetView() {
+      if (network && globalThis.initialView) {
+        network.moveTo({ position: globalThis.initialView, scale: 1, animation: true });
+      } else if (network) {
+        network.fit({ animation: true });
+      }
+    }
+
     // Get token from URL
     const urlParams = new URLSearchParams(globalThis.location.search);
     const token = urlParams.get('token') || globalThis.location.pathname.split('/').pop();
+    currentEmbedToken = token; // Store in global variable
 
-    let network;
-    let nodes, edges;
+    let lastSearchedNodeId = null;
 
     async function loadVisualization() {
       try {
-        // Fetch visualization config from server
-        const response = await fetch(`/api/embed/config/${token}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to load visualization: ${response.statusText}`);
-        }
-
-        const config = await response.json();
+        // Always use unlimited query to show all data
+        const requestBody = { 
+          token: currentEmbedToken,
+          query: "MATCH (n)-[r]-(m) RETURN n, r, m"
+        };
 
         // Execute query through proxy
-        const queryResponse = await fetch('/api/proxy/neo4j', {
+        const queryResponse = await fetch('/api/proxy/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token: token,
-            query: config.cypherQuery || 'MATCH (n) RETURN n LIMIT 25'
-          })
+          body: JSON.stringify(requestBody)
         });
 
         if (!queryResponse.ok) {
@@ -173,53 +379,65 @@
           throw new Error(queryResult.error || 'Query execution failed');
         }
 
+        // Color generator for labels/types
+        function stringToColor(str) {
+          let hash = 0;
+          for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          let color = '#';
+          for (let i = 0; i < 3; i++) {
+            const value = (hash >> (i * 8)) & 0xFF;
+            color += ('00' + value.toString(16)).slice(-2);
+          }
+          return color;
+        }
+
         // Transform Neo4j data to vis.js format
         const visNodes = [];
         const visEdges = [];
-        const nodeMap = new Map();
-        let nodeIdCounter = 1;
-        let edgeIdCounter = 1;
+        const nodeIds = new Set(); // Track unique node IDs
+        const edgeIds = new Set(); // Track unique edge IDs
 
-        queryResult.records.forEach(record => {
-          Object.values(record).forEach(value => {
-            // Handle nodes
-            if (value && value.labels && value.properties) {
-              const nodeId = value.identity || `node-${nodeIdCounter++}`;
-              
-              if (!nodeMap.has(nodeId)) {
-                const label = value.labels[0] || 'Node';
-                const props = value.properties;
-                const displayLabel = props.name || props.title || props.id || nodeId;
-                
-                visNodes.push({
-                  id: nodeId,
-                  label: displayLabel,
-                  title: `${label}: ${JSON.stringify(props)}`,
-                  color: label === 'Person' ? '#4CAF50' : label === 'Movie' ? '#2196F3' : '#999',
-                  font: { color: '#fff' }
-                });
-                
-                nodeMap.set(nodeId, true);
-              }
-            }
-            
-            // Handle relationships
-            if (value && value.type && value.start && value.end) {
-              const edgeId = value.identity || `edge-${edgeIdCounter++}`;
-              const props = value.properties || {};
-              
-              visEdges.push({
-                id: edgeId,
-                from: value.start,
-                to: value.end,
-                label: value.type,
-                title: JSON.stringify(props),
-                arrows: 'to',
-                color: { color: '#888' }
-              });
-            }
-          });
+        // Handle nodes
+        queryResult.data.nodes.forEach(node => {
+          if (!nodeIds.has(node.id)) { // Only add if not already added
+            const label = node.labels[0] || 'Node';
+            const props = node.properties || {};
+            const displayLabel = props.name || props.title || props.id || node.id;
+            visNodes.push({
+              id: node.id,
+              label: displayLabel,
+              title: `${label}: ${JSON.stringify(props)}`,
+              color: stringToColor(label),
+              font: { color: '#fff' }
+            });
+            nodeIds.add(node.id);
+          }
         });
+
+        // Handle relationships
+        queryResult.data.relationships.forEach(rel => {
+          if (!edgeIds.has(rel.id)) { // Only add if not already added
+            const props = rel.properties || {};
+            visEdges.push({
+              id: rel.id,
+              from: rel.startNode,
+              to: rel.endNode,
+              label: rel.type,
+              title: JSON.stringify(props),
+              arrows: 'to',
+              color: { color: stringToColor(rel.type) }
+            });
+            edgeIds.add(rel.id);
+          }
+        });
+
+        // Destroy existing network if it exists
+        if (network) {
+          network.destroy();
+          network = null;
+        }
 
         // Create vis.js network
         nodes = new vis.DataSet(visNodes);
@@ -239,6 +457,14 @@
           },
           edges: {
             width: 2,
+            font: {
+              size: 12,
+              color: '#ffffff',
+              background: 'rgba(0,0,0,0.8)',
+              strokeWidth: 2,
+              strokeColor: '#000000',
+              align: 'middle'
+            },
             smooth: {
               type: 'continuous'
             }
@@ -260,6 +486,27 @@
         };
 
         network = new vis.Network(container, data, options);
+        // Drag & drop: giữ vị trí node sau khi di chuyển
+        network.on('dragEnd', function(params) {
+          if (params.nodes && params.nodes.length > 0) {
+            network.setOptions({ physics: false });
+          }
+        });
+        // Save initial view
+        globalThis.initialView = network.getViewPosition ? network.getViewPosition() : null;
+
+        // Node/edge click event - only show detail info
+        network.on('click', function(params) {
+          if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            const node = nodes.get(nodeId);
+            showDetail('Node: ' + node.label, JSON.stringify(node, null, 2));
+          } else if (params.edges.length > 0) {
+            const edgeId = params.edges[0];
+            const edge = edges.get(edgeId);
+            showDetail('Edge: ' + edge.label, JSON.stringify(edge, null, 2));
+          }
+        });
 
         // Hide loading spinner
         document.getElementById('loading').classList.add('hidden');
@@ -293,6 +540,27 @@
 
     // Load visualization on page load
     loadVisualization();
+
+    // Search node by name/id
+    function searchNode() {
+      const query = document.getElementById('search-node').value.trim().toLowerCase();
+      if (!query || !nodes) return;
+      let found = null;
+      nodes.forEach(function(node) {
+        const label = (node.label || '').toLowerCase();
+        const id = (node.id || '').toString().toLowerCase();
+        if (label.includes(query) || id === query) {
+          found = node.id;
+        }
+      });
+      if (found) {
+        lastSearchedNodeId = found;
+        network.selectNodes([found]);
+        network.focus(found, { scale: 1.5, animation: true });
+      } else {
+        alert('Node not found!');
+      }
+    }
   </script>
 </body>
 </html>

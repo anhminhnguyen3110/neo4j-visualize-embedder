@@ -1,7 +1,7 @@
 {
   "name": "hono-neo4j-embed",
   "version": "1.0.0",
-  "description": "Neovis.js embeddable iframe generation with signed tokens using Hono and Neo4j",
+  "description": "Neo4j visualisation embeddable iframe generation with signed tokens using Hono and Neo4j",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -19,7 +19,6 @@
   "keywords": [
     "hono",
     "neo4j",
-    "neovis",
     "embed",
     "jwt",
     "graph"
